@@ -59,18 +59,19 @@ func Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := getFromCache(searchTerm, searchType)
+	cached, err := getFromCache(searchTerm, searchType)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte("error while retrieving from cache"))
 		return
 	}
 
-	if link != "" {
-		jsonRes, err := json.Marshal(link)
+	if cached != "" {
+		jsonRes, err := json.Marshal(cached)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("error while parsing cached data"))
+			fmt.Println(err)
 			return
 		} else {
 			w.WriteHeader(200)
