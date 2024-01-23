@@ -37,9 +37,10 @@ type GridData struct {
 }
 
 const BASE_URL = "https://www.steamgriddb.com/api/v2"
-const GRID_DIMENSIONS = "dimensions=600x900"
-const HGRID_DIMENSIONS = "dimensions=920x430"
-const HERO_DIMENSIONS = "dimensions=1920x620"
+
+// const GRID_DIMENSIONS = "dimensions=600x900"
+// const HGRID_DIMENSIONS = "dimensions=920x430"
+// const HERO_DIMENSIONS = "dimensions=1920x620"
 
 func callAPI(e string, t string, p string) (*http.Response, error) {
 	cnf := *config.Cnf
@@ -87,15 +88,15 @@ func Search(t string, s string) (m string, err error) {
 		return "", err
 	}
 
-	dimensions := GRID_DIMENSIONS
+	dimensions := "" // GRID_DIMENSIONS
 
-	if s == "heroes" {
-		dimensions = HERO_DIMENSIONS
-	} else if s == "hgrids" {
-		dimensions = HGRID_DIMENSIONS
-	} else if s != "grids" {
-		dimensions = "styles=official"
-	}
+	// if s == "heroes" {
+	// 	dimensions = HERO_DIMENSIONS
+	// } else if s == "hgrids" {
+	// 	dimensions = HGRID_DIMENSIONS
+	// } else if s != "grids" {
+	// 	dimensions = "styles=official"
+	// }
 
 	var itype string = s
 	if itype == "hgrids" {
