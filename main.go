@@ -16,6 +16,7 @@ func main() {
 
 	apiRouter := router.PathPrefix("/steamgriddb/api").Subrouter()
 	apiRouter.HandleFunc("/search/{gameName}", controller.Search).Methods("GET")
+	apiRouter.HandleFunc("/image/{url:.*}", controller.ImageProxy).Methods("GET")
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})

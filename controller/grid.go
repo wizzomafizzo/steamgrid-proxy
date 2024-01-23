@@ -3,9 +3,11 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"wizzomafizzo/steamgrid-proxy/config"
 	"wizzomafizzo/steamgrid-proxy/proxy"
@@ -42,6 +44,42 @@ func getFromCache(g string, s string) ([]proxy.Result, error) {
 	// }
 
 	return results, nil
+}
+
+var gridUrlRegex = regexp.MustCompile("^cdn[0-9]{1,2}.steamgriddb.com/grid/")
+
+// https://cdn2.steamgriddb.com/grid/5fc4a6bba793371c716812a0505c72e1.png
+func ImageProxy(w http.ResponseWriter, r *http.Request) {
+	url := mux.Vars(r)["url"]
+
+	if url == "" {
+		w.WriteHeader(400)
+		w.Write([]byte("url is empty"))
+		return
+	}
+
+	if !gridUrlRegex.MatchString(url) {
+		w.WriteHeader(403)
+		w.Write([]byte("url is invalid"))
+		return
+	}
+
+	res, err := http.Get("https://" + url)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Println(err)
+		return
+	}
+
+	if res.StatusCode != 200 {
+		w.WriteHeader(res.StatusCode)
+		w.Write([]byte("error while retrieving image"))
+		return
+	}
+
+	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+	w.WriteHeader(200)
+	io.Copy(w, res.Body)
 }
 
 func Search(w http.ResponseWriter, r *http.Request) {
