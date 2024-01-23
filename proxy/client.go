@@ -39,30 +39,41 @@ const GRID_DIMENSIONS = "dimensions=600x900"
 const HGRID_DIMENSIONS = "dimensions=920x430"
 const HERO_DIMENSIONS = "dimensions=1920x620"
 
-func callAPI(e string, t string, p string) (r *http.Response, err error) {
+func callAPI(e string, t string, p string) (*http.Response, error) {
 	cnf := *config.Cnf
 	client := &http.Client{}
+
 	req, err := http.NewRequest("GET", BASE_URL+e+t+"?"+p, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	req.Header.Set("Authorization", "Bearer "+cnf.ApiKey)
 	req.Header.Set("User-Agent", "curl/7.79.1")
-	r, err = client.Do(req)
+
+	r, err := client.Do(req)
+
 	return r, err
 }
 
 func AutocompleteSearch(t string) (searchResponse ProxySearchResponse, err error) {
-
 	res, err := callAPI("/search/autocomplete/", t, "")
-
 	if err != nil {
 		return ProxySearchResponse{}, err
 	}
 
-	buf, _ := io.ReadAll(res.Body)
-	json.Unmarshal(buf, &searchResponse)
+	buf, err := io.ReadAll(res.Body)
+	if err != nil {
+		return ProxySearchResponse{}, err
+	}
+
+	err = json.Unmarshal(buf, &searchResponse)
+	if err != nil {
+		return ProxySearchResponse{}, err
+	}
 
 	if len(searchResponse.Data) == 0 {
-		return ProxySearchResponse{}, errors.New("404 Game Not Found")
+		return ProxySearchResponse{}, errors.New("no results found")
 	}
 
 	return searchResponse, nil
@@ -71,9 +82,8 @@ func AutocompleteSearch(t string) (searchResponse ProxySearchResponse, err error
 func Search(t string, s string) (m string, err error) {
 	searchResponse, err := AutocompleteSearch(t)
 	if err != nil {
-		return "404", err
+		return "", err
 	}
-	msg := searchResponse.Data[0].Name
 
 	dimensions := GRID_DIMENSIONS
 
@@ -90,21 +100,32 @@ func Search(t string, s string) (m string, err error) {
 		itype = "grids"
 	}
 
-	res, err := callAPI(fmt.Sprintf("/%s/game/", itype), fmt.Sprint(searchResponse.Data[0].Id), dimensions)
-
+	res, err := callAPI(
+		fmt.Sprintf("/%s/game/", itype),
+		fmt.Sprint(searchResponse.Data[0].Id),
+		dimensions,
+	)
 	if err != nil {
 		return "", err
 	}
 
 	var gridResponse ProxyGridResponse
-	buf, _ := io.ReadAll(res.Body)
-	json.Unmarshal(buf, &gridResponse)
 
-	if len(gridResponse.Data) == 0 {
-		return "404", errors.New("404 Grid Not Found")
+	buf, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
 	}
 
-	msg = gridResponse.Data[0].Url
+	err = json.Unmarshal(buf, &gridResponse)
+	if err != nil {
+		return "", err
+	}
+
+	if len(gridResponse.Data) == 0 {
+		return "", errors.New("no results found")
+	}
+
+	msg := gridResponse.Data[0].Url
 
 	err = CreateCache(t, s, msg)
 	if err != nil {
@@ -117,14 +138,11 @@ func Search(t string, s string) (m string, err error) {
 func CreateCache(t string, s string, msg string) (err error) {
 	_, err = os.Create(filepath.Join(config.ProcessPath, "cache", s, t+".txt"))
 	if err != nil {
-		fmt.Println("Error creating cache file for " + t)
-		fmt.Println(err)
 		return err
 	}
+
 	err = os.WriteFile(filepath.Join(config.ProcessPath, "cache", s, t+".txt"), []byte(msg), 0)
 	if err != nil {
-		fmt.Println("Error writing cache file for " + t)
-		fmt.Println(err)
 		return err
 	}
 
