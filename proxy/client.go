@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"usebottles.com/steamgrid-proxy/config"
+	"wizzomafizzo/steamgrid-proxy/config"
 )
 
 type ProxySearchResponse struct {

@@ -6,9 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"wizzomafizzo/steamgrid-proxy/config"
+	"wizzomafizzo/steamgrid-proxy/proxy"
+
 	"github.com/gorilla/mux"
-	"usebottles.com/steamgrid-proxy/config"
-	"usebottles.com/steamgrid-proxy/proxy"
 )
 
 func Search(w http.ResponseWriter, r *http.Request) {

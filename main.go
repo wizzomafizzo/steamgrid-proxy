@@ -3,10 +3,11 @@ package main
 import (
 	"net/http"
 
+	"wizzomafizzo/steamgrid-proxy/config"
+	"wizzomafizzo/steamgrid-proxy/controller"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"usebottles.com/steamgrid-proxy/config"
-	"usebottles.com/steamgrid-proxy/controller"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module usebottles.com/steamgrid-proxy
+module wizzomafizzo/steamgrid-proxy
 
 go 1.18
 
