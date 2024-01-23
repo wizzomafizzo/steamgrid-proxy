@@ -122,7 +122,7 @@ func Search(t string, s string) (m string, err error) {
 	}
 
 	if len(gridResponse.Data) == 0 {
-		return "", errors.New("no results found")
+		return "404", errors.New("no results found")
 	}
 
 	msg := gridResponse.Data[0].Url

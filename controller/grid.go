@@ -12,6 +12,28 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func getFromCache(g string, s string) (string, error) {
+	data, err := os.ReadFile(filepath.Join(config.ProcessPath, "cache", s, g+".txt"))
+	if err != nil {
+		return "", err
+	}
+
+	link := string(data)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", link, nil)
+	if err != nil {
+		return "", err
+	}
+
+	r, err := client.Do(req)
+	if err != nil || r.StatusCode != 200 {
+		return "", err
+	}
+
+	return link, nil
+}
+
 func Search(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	searchTerm := vars["gameName"]
@@ -19,7 +41,7 @@ func Search(w http.ResponseWriter, r *http.Request) {
 
 	if searchTerm == "" {
 		w.WriteHeader(400)
-		w.Write([]byte("Missing gameName."))
+		w.Write([]byte("game name is empty"))
 		return
 	}
 
@@ -29,20 +51,31 @@ func Search(w http.ResponseWriter, r *http.Request) {
 
 	if !config.IsValidImageType(searchType) {
 		w.WriteHeader(400)
-		w.Write([]byte("Invalid search type"))
+		w.Write([]byte("search type invalid, must be: grids, hgrids, heroes, logos, icons"))
 		return
 	}
 
-	link := getFromCache(searchTerm, searchType)
-	if link != "" {
-		jsonRes, _ := json.Marshal(link)
-		w.WriteHeader(200)
-		w.Write(jsonRes)
+	link, err := getFromCache(searchTerm, searchType)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte("error while retrieving from cache"))
 		return
+	}
+
+	if link != "" {
+		jsonRes, err := json.Marshal(link)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("error while parsing cached data"))
+			return
+		} else {
+			w.WriteHeader(200)
+			w.Write(jsonRes)
+			return
+		}
 	}
 
 	res, err := proxy.Search(searchTerm, searchType)
-
 	if err != nil {
 		if res == "404" {
 			w.WriteHeader(404)
@@ -56,22 +89,4 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	jsonRes, _ := json.Marshal(res)
 	w.WriteHeader(200)
 	w.Write(jsonRes)
-}
-
-func getFromCache(g string, s string) string {
-	data, err := os.ReadFile(filepath.Join(config.ProcessPath, "cache", s, g+".txt"))
-	if err != nil {
-		return ""
-	}
-
-	link := string(data)
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", link, nil)
-	r, err := client.Do(req)
-	if err != nil || r.StatusCode != 200 {
-		return ""
-	}
-
-	return link
 }
