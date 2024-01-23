@@ -18,7 +18,7 @@ You can generate API key [here](https://www.steamgriddb.com/profile/preferences/
 
 Image URLs are cached in `cache` directory in subdirectories based on image type
 
-Run the server
+Run the server:
 
 ```
 ./steamgrid-proxy
@@ -27,11 +27,27 @@ Run the server
 ## API
 
 ```
-/api/search/GAME TITLE/IMAGE_TYPE
+/api/search/<GAME TITLE>
 ```
 
-`GAME TITLE` - title of a game you are looking for  
-`IMAGE_TYPE` - (optional default - grids)
+Returns JSON with image URLs:
+
+```
+[
+    {
+        "gameName": "Haunting Starring Polterguy",
+        "imageUrl": "https://cdn2.steamgriddb.com/grid/5fc4a6bba793371c716812a0505c72e1.png",
+        "thumbnailUrl": "https://cdn2.steamgriddb.com/thumb/5fc4a6bba793371c716812a0505c72e1.png"
+    },
+    {
+        "gameName": "Haunting Starring Polterguy",
+        "imageUrl": "https://cdn2.steamgriddb.com/grid/2613ee1a6014db16e949a08bb1f82be0.png",
+        "thumbnailUrl": "https://cdn2.steamgriddb.com/thumb/2613ee1a6014db16e949a08bb1f82be0.jpg"
+    }
+]
+```
+
+Currently only returns images for the first best matched game from the query.
 
 
 ## Supported image types
