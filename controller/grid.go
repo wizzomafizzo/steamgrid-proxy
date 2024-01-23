@@ -10,9 +10,12 @@ import (
 	"wizzomafizzo/steamgrid-proxy/proxy"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/text/unicode/norm"
 )
 
 func getFromCache(g string, s string) (string, error) {
+	g = norm.NFC.String(g)
+
 	data, err := os.ReadFile(filepath.Join(config.ProcessPath, "cache", s, g+".txt"))
 	if err != nil {
 		return "", err

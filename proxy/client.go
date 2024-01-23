@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 
 	"wizzomafizzo/steamgrid-proxy/config"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 type ProxySearchResponse struct {
@@ -136,6 +138,8 @@ func Search(t string, s string) (m string, err error) {
 }
 
 func CreateCache(t string, s string, msg string) (err error) {
+	t = norm.NFC.String(t)
+
 	_, err = os.Create(filepath.Join(config.ProcessPath, "cache", s, t+".txt"))
 	if err != nil {
 		return err
