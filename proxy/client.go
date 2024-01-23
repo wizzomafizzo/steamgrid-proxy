@@ -33,12 +33,20 @@ type ProxyGridResponse struct {
 }
 
 type GridData struct {
-	Url string `json:"url"`
+	Url   string `json:"url"`
+	Thumb string `json:"thumb"`
+}
+
+type Result struct {
+	GameName     string `json:"gameName"`
+	ImageUrl     string `json:"imageUrl"`
+	ThumbnailUrl string `json:"thumbnailUrl"`
 }
 
 const BASE_URL = "https://www.steamgriddb.com/api/v2"
 
-// const GRID_DIMENSIONS = "dimensions=600x900"
+const GRID_DIMENSIONS = "dimensions=600x900"
+
 // const HGRID_DIMENSIONS = "dimensions=920x430"
 // const HERO_DIMENSIONS = "dimensions=1920x620"
 
@@ -82,26 +90,17 @@ func AutocompleteSearch(t string) (searchResponse ProxySearchResponse, err error
 	return searchResponse, nil
 }
 
-func Search(t string, s string) (m string, err error) {
+func Search(t string, s string) ([]Result, error) {
+	results := []Result{}
+
 	searchResponse, err := AutocompleteSearch(t)
 	if err != nil {
-		return "", err
+		return results, err
 	}
 
-	dimensions := "" // GRID_DIMENSIONS
-
-	// if s == "heroes" {
-	// 	dimensions = HERO_DIMENSIONS
-	// } else if s == "hgrids" {
-	// 	dimensions = HGRID_DIMENSIONS
-	// } else if s != "grids" {
-	// 	dimensions = "styles=official"
-	// }
+	dimensions := GRID_DIMENSIONS
 
 	var itype string = s
-	if itype == "hgrids" {
-		itype = "grids"
-	}
 
 	res, err := callAPI(
 		fmt.Sprintf("/%s/game/", itype),
@@ -109,39 +108,50 @@ func Search(t string, s string) (m string, err error) {
 		dimensions,
 	)
 	if err != nil {
-		return "", err
+		return results, err
 	}
 
 	var gridResponse ProxyGridResponse
 
 	buf, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return results, err
 	}
 
 	err = json.Unmarshal(buf, &gridResponse)
 	if err != nil {
-		return "", err
+		return results, err
 	}
 
 	if len(gridResponse.Data) == 0 {
-		return "404", errors.New("no results found")
+		return results, nil
 	}
 
-	msg := gridResponse.Data[0].Url
+	for _, v := range gridResponse.Data {
+		results = append(results, Result{
+			GameName:     searchResponse.Data[0].Name,
+			ImageUrl:     v.Url,
+			ThumbnailUrl: v.Thumb,
+		})
+	}
 
-	err = CreateCache(t, s, msg)
+	err = CreateCache(t, s, results)
 	if err != nil {
-		return "", err
+		return results, err
 	}
 
-	return msg, nil
+	return results, nil
 }
 
-func CreateCache(t string, s string, msg string) (err error) {
+func CreateCache(t string, s string, results []Result) (err error) {
 	t = norm.NFC.String(t)
 
 	_, err = os.Create(filepath.Join(config.ProcessPath, "cache", s, t+".txt"))
+	if err != nil {
+		return err
+	}
+
+	msg, err := json.Marshal(results)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -79,13 +80,13 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := proxy.Search(searchTerm, searchType)
-	if err != nil {
-		if res == "404" {
-			w.WriteHeader(404)
-		} else {
-			w.WriteHeader(400)
-		}
-		w.Write([]byte(res))
+	if len(res) == 0 {
+		w.WriteHeader(404)
+		w.Write([]byte("no results found"))
+		return
+	} else if err != nil {
+		w.WriteHeader(500)
+		fmt.Println(err)
 		return
 	}
 
