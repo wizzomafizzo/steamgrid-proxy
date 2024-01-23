@@ -20,11 +20,11 @@ type ProxySearchResponse struct {
 }
 
 type GameData struct {
-	Types       []string `json:"types"`
-	Id          int      `json:"id"`
-	Name        string   `json:"name"`
-	Verified    bool     `json:"verified"`
-	ReleaseDate string   `json:"release_date,omitempty"`
+	Types    []string `json:"types"`
+	Id       int      `json:"id"`
+	Name     string   `json:"name"`
+	Verified bool     `json:"verified"`
+	// ReleaseDate int      `json:"release_date,omitempty"`
 }
 
 type ProxyGridResponse struct {
@@ -100,10 +100,8 @@ func Search(t string, s string) ([]Result, error) {
 
 	dimensions := GRID_DIMENSIONS
 
-	var itype string = s
-
 	res, err := callAPI(
-		fmt.Sprintf("/%s/game/", itype),
+		fmt.Sprintf("/%s/game/", s),
 		fmt.Sprint(searchResponse.Data[0].Id),
 		dimensions,
 	)

@@ -1,2 +1,5 @@
 /config/config.json
 /.idea
+/.vscode
+steamgrid-proxy
+/cache

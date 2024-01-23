@@ -14,28 +14,34 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func getFromCache(g string, s string) (string, error) {
+func getFromCache(g string, s string) ([]proxy.Result, error) {
+	results := []proxy.Result{}
 	g = norm.NFC.String(g)
 
 	data, err := os.ReadFile(filepath.Join(config.ProcessPath, "cache", s, g+".txt"))
 	if err != nil {
-		return "", err
+		return results, nil
 	}
 
-	link := string(data)
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", link, nil)
+	err = json.Unmarshal(data, &results)
 	if err != nil {
-		return "", err
+		return results, nil
 	}
 
-	r, err := client.Do(req)
-	if err != nil || r.StatusCode != 200 {
-		return "", err
-	}
+	// link := string(data)
 
-	return link, nil
+	// client := &http.Client{}
+	// req, err := http.NewRequest("GET", link, nil)
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// r, err := client.Do(req)
+	// if err != nil || r.StatusCode != 200 {
+	// 	return "", err
+	// }
+
+	return results, nil
 }
 
 func Search(w http.ResponseWriter, r *http.Request) {
@@ -63,10 +69,11 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte("error while retrieving from cache"))
+		fmt.Println(err)
 		return
 	}
 
-	if cached != "" {
+	if len(cached) > 0 {
 		jsonRes, err := json.Marshal(cached)
 		if err != nil {
 			w.WriteHeader(500)
@@ -81,13 +88,13 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := proxy.Search(searchTerm, searchType)
-	if len(res) == 0 {
-		w.WriteHeader(404)
-		w.Write([]byte("no results found"))
-		return
-	} else if err != nil {
+	if err != nil {
 		w.WriteHeader(500)
 		fmt.Println(err)
+		return
+	} else if len(res) == 0 {
+		w.WriteHeader(404)
+		w.Write([]byte("no results found"))
 		return
 	}
 
