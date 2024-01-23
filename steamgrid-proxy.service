@@ -1,0 +1,15 @@
+[Unit]
+Description=steamgriddb proxy service
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=steamgrid
+Group=steamgrid
+WorkingDirectory=/srv/steamgrid-proxy
+ExecStart=/srv/steamgrid-proxy/steamgrid-proxy
+
+[Install]
+WantedBy=multi-user.target
