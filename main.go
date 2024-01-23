@@ -14,7 +14,7 @@ func main() {
 	cnf := *config.Cnf
 	router := mux.NewRouter()
 
-	apiRouter := router.PathPrefix("/api").Subrouter()
+	apiRouter := router.PathPrefix("/steamgriddb/api").Subrouter()
 	apiRouter.HandleFunc("/search/{gameName}", controller.Search).Methods("GET")
 	apiRouter.HandleFunc("/search/{gameName}/{type}", controller.Search).Methods("GET")
 
